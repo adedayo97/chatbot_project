@@ -4,8 +4,8 @@ from django.conf import settings
 from .models import Node, Option
 import re
 
-# Initialize OpenAI client with API key from settings
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+# ✅ Initialize OpenAI client correctly for PythonAnywhere
+client = OpenAI(api_key=getattr(settings, "OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
 
 def ask_openai(user_input, current_node_id=None):
     """
@@ -79,9 +79,10 @@ IMPORTANT: If you cannot answer based on the context, say "I specialize in CPI T
         
     except Exception as e:
         error_msg = f"I apologize, but I'm experiencing technical difficulties. Please try again later."
-        # Log the error for debugging (you might want to use proper logging)
+        # Log the error for debugging
         print(f"OpenAI API Error: {str(e)}")
         return error_msg
+
 
 def find_relevant_nodes(user_input, current_node_id=None):
     """
@@ -107,7 +108,6 @@ def find_relevant_nodes(user_input, current_node_id=None):
     
     # If no relevant options from current node, search all nodes
     if not relevant_nodes:
-        # Define keyword groups for different services
         keyword_groups = {
             'it_consulting': ['consulting', 'strategy', 'planning', 'infrastructure', 
                              'governance', 'compliance', 'it strategy', 'digital transformation'],
@@ -132,7 +132,6 @@ def find_relevant_nodes(user_input, current_node_id=None):
                            'success stories', 'testimonials']
         }
         
-        # Check for keyword matches
         for node_name, keywords in keyword_groups.items():
             if any(keyword in user_input_lower for keyword in keywords):
                 try:
@@ -145,7 +144,6 @@ def find_relevant_nodes(user_input, current_node_id=None):
     # If still no relevant nodes, return some general nodes
     if not relevant_nodes:
         try:
-            # Try to get general information nodes
             general_nodes = ['greeting', 'services', 'about']
             for node_name in general_nodes:
                 try:
@@ -157,6 +155,7 @@ def find_relevant_nodes(user_input, current_node_id=None):
             pass
     
     return relevant_nodes
+
 
 def get_node_context(relevant_nodes):
     """
@@ -171,12 +170,12 @@ def get_node_context(relevant_nodes):
     
     return "\n\n".join(context_parts)
 
+
 def extract_keywords(text):
     """
     Extract potential keywords from text to help with node matching
     """
     text = text.lower()
-    # Remove common stop words
     stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
     words = re.findall(r'\b[a-z]{3,}\b', text)
     keywords = [word for word in words if word not in stop_words]
