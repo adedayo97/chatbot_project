@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flow Editor</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drawflow/dist/drawflow.min.css">
+  <style>
+    #drawflow { width: 100%; height: 90vh; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h2>Visual Flow Editor</h2>
+  <div id="drawflow"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/drawflow/dist/drawflow.min.js"></script>
+  <script>
+    const editor = new Drawflow(document.getElementById("drawflow"));
+    editor.start();
+
+    // Example nodes
+    editor.addNode("Greeting", 1, 1, 50, 50, "greeting", {}, "Hello! Welcome 🙏");
+    editor.addNode("Service Time", 1, 1, 300, 50, "service_time", {}, "Our service is 9am");
+
+    editor.addConnection(1, 2, "output_1", "input_1");
+  </script>
+</body>
+</html>

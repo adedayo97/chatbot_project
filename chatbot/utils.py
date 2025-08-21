@@ -1,0 +1,183 @@
+import os
+from openai import OpenAI
+from django.conf import settings
+from .models import Node, Option
+import re
+
+# Initialize OpenAI client with API key from settings
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+def ask_openai(user_input, current_node_id=None):
+    """
+    Generate a response using OpenAI API with context from nodes and CPI Technologies website
+    """
+    try:
+        # Get relevant nodes based on user input
+        relevant_nodes = find_relevant_nodes(user_input, current_node_id)
+        
+        # Get node context for the prompt
+        node_context = get_node_context(relevant_nodes)
+        
+        # CPI Technologies website content (based on typical IT company offerings)
+        website_context = """
+        CPI Technologies Inc. is a leading provider of innovative technology solutions. 
+        We specialize in helping businesses transform through cutting-edge IT services, 
+        software development, cloud solutions, and cybersecurity.
+        
+        Our core services include:
+        - IT Consulting & Digital Strategy
+        - Custom Software Development
+        - Cloud Migration & Management
+        - Cybersecurity & Compliance
+        - Data Analytics & Business Intelligence
+        - Managed IT Services
+        - Digital Transformation
+        
+        We serve clients across various industries including healthcare, finance, 
+        manufacturing, retail, and education. Our mission is to deliver exceptional 
+        value through technology expertise, innovative thinking, and commitment to excellence.
+        
+        Contact Information:
+        - Phone: +1224-201-8888
+        - Email: sales@cpitechinc.com
+        - Website: www.cpitechinc.com
+        - Address: 1900 N Austin Avenue, suite 210,Chicago 60639 IL
+        """
+        
+        # Create a comprehensive system prompt
+        system_prompt = f"""You are a friendly AI assistant for CPI Technologies, a professional IT services company.
+
+COMPANY BACKGROUND:
+{website_context}
+
+RELEVANT SERVICE INFORMATION:
+{node_context}
+
+RESPONSE GUIDELINES:
+1. Respond primarily based on the CPI Technologies context provided above
+2. If the query is unrelated to IT services or CPI Technologies, politely redirect to relevant topics
+3. Keep responses concise (2-3 paragraphs maximum)
+4. Maintain a professional, helpful tone
+5. If asking follow-up questions, make them open-ended to continue the conversation
+6. For pricing inquiries, explain that it varies by project and offer to provide a custom quote
+7. For technical issues, offer to connect with appropriate specialists
+
+IMPORTANT: If you cannot answer based on the context, say "I specialize in CPI Technologies services. How can I help you with our IT solutions?"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_input}
+            ],
+            temperature=0.3,
+            max_tokens=350,
+            top_p=0.9
+        )
+        
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        error_msg = f"I apologize, but I'm experiencing technical difficulties. Please try again later."
+        # Log the error for debugging (you might want to use proper logging)
+        print(f"OpenAI API Error: {str(e)}")
+        return error_msg
+
+def find_relevant_nodes(user_input, current_node_id=None):
+    """
+    Find nodes that are relevant to the user's query, prioritizing current node options
+    """
+    relevant_nodes = []
+    user_input_lower = user_input.lower()
+    
+    # First, check options from the current node if available
+    if current_node_id:
+        try:
+            current_node = Node.objects.get(id=current_node_id)
+            options = Option.objects.filter(from_node=current_node)
+            
+            for option in options:
+                if option.keyword.lower() in user_input_lower:
+                    try:
+                        relevant_nodes.append(option.to_node)
+                    except Node.DoesNotExist:
+                        pass
+        except (Node.DoesNotExist, Option.DoesNotExist):
+            pass
+    
+    # If no relevant options from current node, search all nodes
+    if not relevant_nodes:
+        # Define keyword groups for different services
+        keyword_groups = {
+            'it_consulting': ['consulting', 'strategy', 'planning', 'infrastructure', 
+                             'governance', 'compliance', 'it strategy', 'digital transformation'],
+            'software_dev': ['software', 'development', 'application', 'app', 'web', 
+                           'mobile', 'api', 'programming', 'custom software', 'develop'],
+            'cloud_services': ['cloud', 'aws', 'azure', 'google cloud', 'migration', 
+                             'devops', 'infrastructure', 'cloud computing'],
+            'cybersecurity': ['security', 'cyber', 'protection', 'hack', 'firewall', 
+                            'compliance', 'gdpr', 'hipaa', 'security', 'data protection'],
+            'data_analytics': ['data', 'analytics', 'business intelligence', 'bi', 
+                             'reporting', 'dashboard', 'insights'],
+            'managed_services': ['managed', 'support', 'maintenance', 'outsourcing', 
+                               'it support', 'helpdesk'],
+            'services': ['services', 'offerings', 'solutions', 'what can you do', 
+                       'what do you offer'],
+            'about': ['about', 'company', 'who are you', 'background', 'history', 
+                    'mission', 'vision'],
+            'contact': ['contact', 'phone', 'email', 'address', 'location', 
+                      'get in touch', 'reach', 'call'],
+            'pricing': ['price', 'cost', 'how much', 'pricing', 'quote', 'budget'],
+            'case_studies': ['examples', 'portfolio', 'case studies', 'clients', 
+                           'success stories', 'testimonials']
+        }
+        
+        # Check for keyword matches
+        for node_name, keywords in keyword_groups.items():
+            if any(keyword in user_input_lower for keyword in keywords):
+                try:
+                    node = Node.objects.get(name=node_name)
+                    if node not in relevant_nodes:
+                        relevant_nodes.append(node)
+                except Node.DoesNotExist:
+                    pass
+    
+    # If still no relevant nodes, return some general nodes
+    if not relevant_nodes:
+        try:
+            # Try to get general information nodes
+            general_nodes = ['greeting', 'services', 'about']
+            for node_name in general_nodes:
+                try:
+                    node = Node.objects.get(name=node_name)
+                    relevant_nodes.append(node)
+                except Node.DoesNotExist:
+                    pass
+        except:
+            pass
+    
+    return relevant_nodes
+
+def get_node_context(relevant_nodes):
+    """
+    Extract context from relevant nodes for the OpenAI prompt
+    """
+    if not relevant_nodes:
+        return "No specific service information available. Please refer to general company information."
+    
+    context_parts = []
+    for node in relevant_nodes:
+        context_parts.append(f"{node.message}")
+    
+    return "\n\n".join(context_parts)
+
+def extract_keywords(text):
+    """
+    Extract potential keywords from text to help with node matching
+    """
+    text = text.lower()
+    # Remove common stop words
+    stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'}
+    words = re.findall(r'\b[a-z]{3,}\b', text)
+    keywords = [word for word in words if word not in stop_words]
+    return set(keywords)
