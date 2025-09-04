@@ -466,39 +466,49 @@
 
     // Update the startConversation function
     function startConversation() {
-      // Show loader and disable button
-      startBtn.classList.add('loading');
-      loader.style.display = 'block';
+  // Show loader and disable button
+  startBtn.classList.add('loading');
+  loader.style.display = 'block';
+  
+  // Check if user is authenticated by making a request to a protected endpoint
+  fetch('/get_start_node/')
+    .then(res => {
+      if (res.status === 403 || res.status === 401) {
+        // User is not authenticated, redirect to login
+        window.location.href = '/';
+        return Promise.reject('Not authenticated');
+      }
+      return res.json();
+    })
+    .then(data => {
+      if (data.current_node) {
+        currentNodeId = data.current_node;
+      }
       
-      // Get the starting node from the server
-      fetch('/get_start_node/')
-        .then(res => res.json())
-        .then(data => {
-          if (data.current_node) {
-            currentNodeId = data.current_node;
-          }
-          
-          // Hide invitation page and show chat page after a short delay
-          setTimeout(() => {
-            document.getElementById('invitationPage').style.display = 'none';
-            document.getElementById('chatPage').style.display = 'block';
-            
-            // Reset button state
-            startBtn.classList.remove('loading');
-            loader.style.display = 'none';
-          }, 1000); // 1 second delay to show the spinner
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          // Reset button state even if there's an error
-          startBtn.classList.remove('loading');
-          loader.style.display = 'none';
-          
-          // Still transition to chat page
-          document.getElementById('invitationPage').style.display = 'none';
-          document.getElementById('chatPage').style.display = 'block';
-        });
-    }
+      // Hide invitation page and show chat page after a short delay
+      setTimeout(() => {
+        document.getElementById('invitationPage').style.display = 'none';
+        document.getElementById('chatPage').style.display = 'block';
+        
+        // Reset button state
+        startBtn.classList.remove('loading');
+        loader.style.display = 'none';
+      }, 1000); // 1 second delay to show the spinner
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      // Reset button state even if there's an error
+      startBtn.classList.remove('loading');
+      loader.style.display = 'none';
+      
+      // If it's an authentication error, we've already redirected
+      if (error !== 'Not authenticated') {
+        // Still transition to chat page for other errors
+        document.getElementById('invitationPage').style.display = 'none';
+        document.getElementById('chatPage').style.display = 'block';
+      }
+    });
+}
 
     // Update the sendMessage function to include current node
     function sendMessage() {
@@ -586,5 +596,6 @@
       return cookieValue;
     }
   </script>
+  
 </body>
 </html>
