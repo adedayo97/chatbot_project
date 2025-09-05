@@ -379,6 +379,51 @@
       color: #7f8c8d;
       border-top: 1px solid #e6e6e6;
     }
+
+    /* Service buttons styling */
+    .service-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .service-button {
+      background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .service-button:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    /* Yes/No buttons styling */
+    .confirmation-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .confirmation-button {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .confirmation-button.no {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
   </style>
 </head>
 <body>
@@ -436,12 +481,7 @@
         <div class="chat-container">
           <div id="chat-header">AI Assistant</div>
           <div id="chatbox">
-            <div class="message-container">
-              <div class="message bot">Hello! I'm your AI assistant. How can I help you today?</div>
-            </div>
-            <div class="message-container">
-              <div class="message bot">You can ask me questions about our products, services, or get help with any issues you're experiencing.</div>
-            </div>
+            <!-- Messages will be added here dynamically -->
           </div>
           <div id="chat-input">
             <input type="text" id="userInput" placeholder="Type your message here..." onkeypress="if(event.key==='Enter'){sendMessage();}">
@@ -457,126 +497,231 @@
   </div>
 
   <script>
-    // Add this variable to track the current node
+    // Add these variables to track the current node and session
     let currentNodeId = null;
+    let sessionId = generateSessionId();
     
     // Get references to elements
     const startBtn = document.getElementById('startBtn');
     const loader = document.getElementById('loader');
+    const chatbox = document.getElementById('chatbox');
+
+    // Generate a unique session ID
+    function generateSessionId() {
+      return 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    }
 
     // Update the startConversation function
     function startConversation() {
-  // Show loader and disable button
-  startBtn.classList.add('loading');
-  loader.style.display = 'block';
-  
-  // Check if user is authenticated by making a request to a protected endpoint
-  fetch('/get_start_node/')
-    .then(res => {
-      if (res.status === 403 || res.status === 401) {
-        // User is not authenticated, redirect to login
-        window.location.href = '/';
-        return Promise.reject('Not authenticated');
-      }
-      return res.json();
-    })
-    .then(data => {
-      if (data.current_node) {
-        currentNodeId = data.current_node;
-      }
+      // Show loader and disable button
+      startBtn.classList.add('loading');
+      loader.style.display = 'block';
       
-      // Hide invitation page and show chat page after a short delay
-      setTimeout(() => {
-        document.getElementById('invitationPage').style.display = 'none';
-        document.getElementById('chatPage').style.display = 'block';
-        
-        // Reset button state
-        startBtn.classList.remove('loading');
-        loader.style.display = 'none';
-      }, 1000); // 1 second delay to show the spinner
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      // Reset button state even if there's an error
-      startBtn.classList.remove('loading');
-      loader.style.display = 'none';
-      
-      // If it's an authentication error, we've already redirected
-      if (error !== 'Not authenticated') {
-        // Still transition to chat page for other errors
-        document.getElementById('invitationPage').style.display = 'none';
-        document.getElementById('chatPage').style.display = 'block';
-      }
-    });
-}
+      // Get the start node from the server
+      fetch('/get_start_node/')
+        .then(res => res.json())
+        .then(data => {
+          if (data.current_node) {
+            currentNodeId = data.current_node;
+          }
+          
+          // Add the welcome message to the chat
+          addBotMessage(data.message);
+          
+          // Hide invitation page and show chat page after a short delay
+          setTimeout(() => {
+            document.getElementById('invitationPage').style.display = 'none';
+            document.getElementById('chatPage').style.display = 'block';
+            
+            // Reset button state
+            startBtn.classList.remove('loading');
+            loader.style.display = 'none';
+            
+            // Show service options if needed
+            if (data.show_service_options) {
+              showServiceOptions();
+            }
+          }, 1000);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // Reset button state even if there's an error
+          startBtn.classList.remove('loading');
+          loader.style.display = 'none';
+          
+          // Still transition to chat page for errors
+          document.getElementById('invitationPage').style.display = 'none';
+          document.getElementById('chatPage').style.display = 'block';
+          
+          // Add a default message
+          addBotMessage("Hello! Welcome to CPI Technologies. How can I help you achieve your goal today?");
+          showServiceOptions();
+        });
+    }
 
-    // Update the sendMessage function to include current node
+    // Function to show service options as buttons
+    function showServiceOptions() {
+      const serviceOptions = `
+        <div class="service-buttons">
+          <button class="service-button" onclick="selectService('training course')">Training Course</button>
+          <button class="service-button" onclick="selectService('digital services')">Digital Services</button>
+          <button class="service-button" onclick="selectService('it services')">IT Services</button>
+          <button class="service-button" onclick="selectService('other service')">Other Service</button>
+        </div>
+      `;
+      
+      addBotMessage("Please select one of our services:", serviceOptions);
+    }
+
+    // Function to handle service selection
+    function selectService(service) {
+      // Add user's selection as a message
+      addUserMessage(service);
+      
+      // Send the service selection to the server
+      sendMessageToServer(service);
+    }
+
+    // Function to show yes/no confirmation buttons
+    function showConfirmationButtons(email) {
+      const confirmationButtons = `
+        <div class="confirmation-buttons">
+          <button class="confirmation-button" onclick="confirmEmail('yes', '${email}')">Yes, it's correct</button>
+          <button class="confirmation-button no" onclick="confirmEmail('no', '${email}')">No, it's wrong</button>
+        </div>
+      `;
+      
+      addBotMessage(`Thank you. Just to make sure we got it right, your email is ${email}. Is this correct?`, confirmationButtons);
+    }
+
+    // Function to handle email confirmation
+    function confirmEmail(response, email) {
+      addUserMessage(response);
+      sendMessageToServer(response);
+    }
+
+    // Function to add a bot message to the chat
+    function addBotMessage(message, htmlContent = '') {
+      const messageContainer = document.createElement("div");
+      messageContainer.className = "message-container";
+      
+      let messageHTML = `<div class="message bot">${message}`;
+      if (htmlContent) {
+        messageHTML += htmlContent;
+      }
+      messageHTML += `</div>`;
+      
+      messageContainer.innerHTML = messageHTML;
+      chatbox.appendChild(messageContainer);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    // Function to add a user message to the chat
+    function addUserMessage(message) {
+      const messageContainer = document.createElement("div");
+      messageContainer.className = "message-container user";
+      messageContainer.innerHTML = `<div class="message user">${message}</div>`;
+      chatbox.appendChild(messageContainer);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    // Function to send message to server
+    // Function to send message to server
+function sendMessageToServer(message) {
+  // Show typing indicator
+  const typingContainer = document.createElement("div");
+  typingContainer.className = "message-container";
+  typingContainer.innerHTML = `
+      <div class="message bot typing">
+          Thinking
+          <div class="typing-dots">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+          </div>
+      </div>
+  `;
+  chatbox.appendChild(typingContainer);
+  chatbox.scrollTop = chatbox.scrollHeight;
+
+  // Send to backend with current node and session ID
+  fetch('/reply/', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({
+          message: message,
+          current_node: currentNodeId,
+          session_id: sessionId
+      })
+  })
+      .then(res => res.json())
+      .then(data => {
+          // Remove typing indicator
+          typingContainer.remove();
+
+          // Update current node
+          if (data.current_node) {
+              currentNodeId = data.current_node;
+          }
+
+          // Show bot response
+          addBotMessage(data.response);
+
+          // Check if we need to show confirmation buttons for email
+          if (data.response.includes("Is this correct?") && data.response.includes("@")) {
+              // Extract email from response
+              const emailMatch = data.response.match(/[\w\.-]+@[\w\.-]+\.\w+/);
+              if (emailMatch) {
+                  showConfirmationButtons(emailMatch[0]);
+              }
+          }
+          
+          // Check if we need to show service options
+          if (data.show_service_options) {
+              showServiceOptions();
+          }
+          
+          // Check if we're waiting for verification
+          if (data.waiting_for_verification) {
+              // Disable the input field until verification is complete
+              document.getElementById("userInput").disabled = true;
+              document.getElementById("sendBtn").disabled = true;
+          } else {
+              // Re-enable input if not waiting for verification
+              document.getElementById("userInput").disabled = false;
+              document.getElementById("sendBtn").disabled = false;
+          }
+      })
+      .catch(err => {
+          // Remove typing indicator
+          typingContainer.remove();
+          
+          // Re-enable input in case of error
+          document.getElementById("userInput").disabled = false;
+          document.getElementById("sendBtn").disabled = false;
+          
+          // Show error message
+          addBotMessage("Sorry, I'm having trouble connecting right now. Please try again later.");
+      });
+}
+    
+
+    // Update the sendMessage function for text input
     function sendMessage() {
       let input = document.getElementById("userInput");
       let text = input.value.trim();
       if (!text) return;
 
       // Add user message
-      const userMessageContainer = document.createElement("div");
-      userMessageContainer.className = "message-container user";
-      userMessageContainer.innerHTML = `<div class="message user">${text}</div>`;
-      chatbox.appendChild(userMessageContainer);
-      chatbox.scrollTop = chatbox.scrollHeight;
+      addUserMessage(text);
 
-      // Show typing indicator
-      const typingContainer = document.createElement("div");
-      typingContainer.className = "message-container";
-      typingContainer.innerHTML = `
-        <div class="message bot typing">
-          Thinking
-          <div class="typing-dots">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-          </div>
-        </div>
-      `;
-      chatbox.appendChild(typingContainer);
-      chatbox.scrollTop = chatbox.scrollHeight;
+      // Send to server
+      sendMessageToServer(text);
 
-      // Send to backend with current node
-      fetch('/reply/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-          message: text,
-          current_node: currentNodeId
-        })
-      })
-        .then(res => res.json())
-        .then(data => {
-          // Remove typing
-          typingContainer.remove();
-
-          // Update current node
-          if (data.current_node) {
-            currentNodeId = data.current_node;
-          }
-
-          // Show bot response
-          const botMessageContainer = document.createElement("div");
-          botMessageContainer.className = "message-container";
-          botMessageContainer.innerHTML = `<div class="message bot">${data.response}</div>`;
-          chatbox.appendChild(botMessageContainer);
-          chatbox.scrollTop = chatbox.scrollHeight;
-        })
-        .catch(err => {
-          typingContainer.remove();
-          const errorContainer = document.createElement("div");
-          errorContainer.className = "message-container";
-          errorContainer.innerHTML = `<div class="message bot">Sorry, I'm having trouble connecting right now. Please try again later.</div>`;
-          chatbox.appendChild(errorContainer);
-          chatbox.scrollTop = chatbox.scrollHeight;
-        });
-
+      // Clear input
       input.value = "";
     }
 
@@ -595,7 +740,98 @@
       }
       return cookieValue;
     }
-  </script>
+</script>
+<script>
+  // Listen for email verification messages from other tabs/windows
+  window.addEventListener('message', function(event) {
+      if (event.data.type === 'email_verified' && event.data.verified) {
+          if (event.data.session_id === sessionId) {
+              // Re-enable the chat input
+              document.getElementById("userInput").disabled = false;
+              document.getElementById("sendBtn").disabled = false;
+              
+              // Show a message that verification was successful
+              addBotMessage("Great! Your email has been verified. How can I help you continue?");
+          }
+      }
+  });
+
+  // Function to check verification status with the server
+  function checkVerificationStatus() {
+      fetch(`/check-verification/?session_id=${sessionId}`)
+          .then(res => res.json())
+          .then(data => {
+              if (data.verified) {
+                  // Re-enable the chat input
+                  document.getElementById("userInput").disabled = false;
+                  document.getElementById("sendBtn").disabled = false;
+                  
+                  // Show a message that verification was successful
+                  addBotMessage("Great! Your email has been verified. How can I help you continue?");
+                  
+                  // Clear any interval that might be running
+                  clearInterval(verificationCheckInterval);
+              }
+          })
+          .catch(err => {
+              console.log('Error checking verification status:', err);
+          });
+  }
+
+  // Check session storage for verification status when page loads
+  window.addEventListener('load', function() {
+      const isVerified = sessionStorage.getItem('email_verified');
+      const verificationTime = sessionStorage.getItem('verification_time');
+      const verifiedSessionId = sessionStorage.getItem('verified_session_id');
+      
+      if (isVerified === 'true' && verifiedSessionId === sessionId) {
+          // Check if verification was recent (within last 5 minutes)
+          const currentTime = new Date().getTime();
+          const fiveMinutes = 5 * 60 * 1000;
+          
+          if (currentTime - parseInt(verificationTime) < fiveMinutes) {
+              // Re-enable the chat input
+              document.getElementById("userInput").disabled = false;
+              document.getElementById("sendBtn").disabled = false;
+              
+              // Show a message that verification was successful
+              addBotMessage("Welcome back! Your email has been verified. How can I help you today?");
+              
+              // Clear the verification status
+              sessionStorage.removeItem('email_verified');
+              sessionStorage.removeItem('verification_time');
+              sessionStorage.removeItem('verified_session_id');
+          }
+      }
+      
+      // If input is disabled, start checking verification status periodically
+      if (document.getElementById("userInput").disabled) {
+          verificationCheckInterval = setInterval(checkVerificationStatus, 3000);
+      }
+  });
+
+  let verificationCheckInterval = null;
+
+  // Also add a function to check verification status periodically
+  setInterval(function() {
+      // If input is disabled but we're not waiting for verification, re-enable it
+      const inputDisabled = document.getElementById("userInput").disabled;
+      const sendBtnDisabled = document.getElementById("sendBtn").disabled;
+      
+      if (inputDisabled || sendBtnDisabled) {
+          // Start checking verification status if not already doing so
+          if (!verificationCheckInterval) {
+              verificationCheckInterval = setInterval(checkVerificationStatus, 3000);
+          }
+      } else {
+          // Stop checking if input is enabled
+          if (verificationCheckInterval) {
+              clearInterval(verificationCheckInterval);
+              verificationCheckInterval = null;
+          }
+      }
+  }, 3000); // Check every 3 seconds
+</script>
   
 </body>
 </html>
