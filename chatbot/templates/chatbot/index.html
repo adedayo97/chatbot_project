@@ -219,12 +219,18 @@
       background: #f8f9fa;
       display: flex;
       flex-direction: column;
+      /* Prevent horizontal overflow */
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .message-container {
       display: flex;
       margin: 10px 0;
       width: 100%;
+      /* Ensure containers don't cause overflow */
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .message-container.user {
@@ -232,18 +238,22 @@
     }
 
     .message {
-  max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 18px;
-  line-height: 1.4;
-  font-size: 15px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 0.3s ease;
-  /* Add these properties to prevent text overflow */
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  hyphens: auto;
-}
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      line-height: 1.4;
+      font-size: 15px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 0.3s ease;
+      /* Force text wrapping and prevent overflow */
+      overflow-wrap: break-word;
+      word-break: break-word;
+      hyphens: auto;
+      /* Ensure box sizing includes padding */
+      box-sizing: border-box;
+      /* Prevent horizontal overflow */
+      max-width: 100%;
+    }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -269,6 +279,9 @@
       background: #fff;
       padding: 15px 20px;
       align-items: center;
+      /* Prevent horizontal overflow */
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     #userInput {
@@ -280,6 +293,9 @@
       color: #333;
       border-radius: 24px;
       margin-right: 10px;
+      /* Prevent horizontal overflow */
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     #sendBtn {
