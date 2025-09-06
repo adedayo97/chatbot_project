@@ -21,6 +21,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      padding: 20px;
     }
 
     .invitation-container {
@@ -30,7 +31,7 @@
       text-align: center;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
       max-width: 500px;
-      width: 90%;
+      width: 100%;
       position: relative;
     }
 
@@ -101,17 +102,18 @@
     .chat-page {
       display: none;
       width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
     .container {
-      max-width: 1200px;
-      margin: 0 auto;
+      width: 100%;
       padding: 20px;
     }
 
     header {
       text-align: center;
-      padding: 40px 20px;
+      padding: 30px 20px;
       background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
       color: white;
       border-radius: 12px;
@@ -124,27 +126,36 @@
       opacity: 0.9;
       max-width: 600px;
       margin: 0 auto;
+      line-height: 1.5;
     }
 
     .main-content {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 30px;
       margin-bottom: 40px;
     }
 
-    @media (max-width: 768px) {
+    @media (min-width: 992px) {
       .main-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
       }
     }
 
     .info-panel {
-      background: white;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    order: 1; /* Changed from order: 2 to order: 1 */
+  }
+
+  @media (min-width: 992px) {
+    .info-panel {
+      order: 1; /* Keep the same for large screens */
     }
+  }
+
 
     .info-panel h2 {
       color: #3498db;
@@ -155,6 +166,7 @@
 
     .features {
       list-style: none;
+      margin-bottom: 25px;
     }
 
     .features li {
@@ -183,14 +195,21 @@
     }
 
     .chat-container {
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-      display: flex;
-      flex-direction: column;
-      height: 600px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    order: 2; /* Changed from order: 1 to order: 2 */
+  }
+
+  @media (min-width: 992px) {
+    .chat-container {
+      order: 2; /* Keep the same for large screens */
     }
+  }
 
     #chat-header {
       background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
@@ -219,7 +238,6 @@
       background: #f8f9fa;
       display: flex;
       flex-direction: column;
-      /* Prevent horizontal overflow */
       max-width: 100%;
       box-sizing: border-box;
     }
@@ -228,7 +246,6 @@
       display: flex;
       margin: 10px 0;
       width: 100%;
-      /* Ensure containers don't cause overflow */
       max-width: 100%;
       box-sizing: border-box;
     }
@@ -238,21 +255,22 @@
     }
 
     .message {
-      max-width: 70%;
+      max-width: 85%;
       padding: 12px 16px;
       border-radius: 18px;
       line-height: 1.4;
       font-size: 15px;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       animation: fadeIn 0.3s ease;
-      /* Force text wrapping and prevent overflow */
       overflow-wrap: break-word;
       word-break: break-word;
-      hyphens: auto;
-      /* Ensure box sizing includes padding */
       box-sizing: border-box;
-      /* Prevent horizontal overflow */
-      max-width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .message {
+        max-width: 70%;
+      }
     }
 
     @keyframes fadeIn {
@@ -279,7 +297,6 @@
       background: #fff;
       padding: 15px 20px;
       align-items: center;
-      /* Prevent horizontal overflow */
       max-width: 100%;
       box-sizing: border-box;
     }
@@ -293,7 +310,6 @@
       color: #333;
       border-radius: 24px;
       margin-right: 10px;
-      /* Prevent horizontal overflow */
       max-width: 100%;
       box-sizing: border-box;
     }
@@ -307,6 +323,7 @@
       border-radius: 24px;
       font-weight: 600;
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
     #sendBtn:hover {
@@ -366,9 +383,21 @@
 
     .examples {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: 1fr;
       gap: 20px;
       margin-top: 30px;
+    }
+
+    @media (min-width: 576px) {
+      .examples {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 768px) {
+      .examples {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
 
     .example-card {
@@ -377,6 +406,7 @@
       padding: 20px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
       transition: transform 0.3s ease;
+      height: 100%;
     }
 
     .example-card:hover {
@@ -386,10 +416,13 @@
     .example-card h3 {
       color: #3498db;
       margin-bottom: 15px;
+      font-size: 1.1rem;
     }
 
     .example-card p {
       color: #7f8c8d;
+      margin-bottom: 0;
+      font-size: 0.9rem;
     }
 
     footer {
@@ -417,6 +450,14 @@
       cursor: pointer;
       font-size: 14px;
       transition: all 0.2s ease;
+      flex: 1 0 calc(50% - 10px);
+      text-align: center;
+    }
+
+    @media (min-width: 480px) {
+      .service-button {
+        flex: 1 0 auto;
+      }
     }
 
     .service-button:hover {
@@ -429,6 +470,7 @@
       display: flex;
       gap: 10px;
       margin-top: 10px;
+      flex-wrap: wrap;
     }
 
     .confirmation-button {
@@ -439,10 +481,23 @@
       border-radius: 15px;
       cursor: pointer;
       font-size: 14px;
+      flex: 1;
     }
 
     .confirmation-button.no {
       background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    }
+
+    /* Discount badge styling */
+    .discount-badge {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 15px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 10px;
+      display: inline-block;
     }
   </style>
 </head>
@@ -452,8 +507,8 @@
     <div class="logo">
       <img src="https://cpitechinc.com/wp-content/uploads/2023/07/logo.png" alt="CPI Technologies Logo" class="logo-image">
     </div>
-    <h1>You've been invited to have a conversation with CPI Technologies Chatbot</h1>
-    <p>Want to create your own?</p>
+    <h1>You've been invited to learn about CPI Technologies' i3Cert Generative AI Certification Pathway</h1>
+    <p>Ready to future-proof your career with AI?</p>
     <button class="start-btn" id="startBtn" onclick="startConversation()">
       Start Conversation
       <div class="loader" id="loader"></div>
@@ -466,7 +521,7 @@
       <header>
         <div class="logo">
             <img src="https://cpitechinc.com/wp-content/uploads/2023/07/logo.png" alt="CPI Technologies Logo" class="logo-image">
-            <p class="subtitle">Get instant answers to your questions with our intelligent chatbot powered by CPI Technologies</p>
+            <p class="subtitle">Get information about our i3Cert Generative AI certifications with our intelligent training advisor</p>
         </div>
       </header>
 
@@ -474,32 +529,32 @@
         <div class="info-panel">
           <h2>How It Works</h2>
           <ul class="features">
-            <li>Ask questions in natural language</li>
-            <li>Get instant, accurate responses</li>
+            <li>Learn about our 4-level certification pathway</li>
+            <li>Get details on each certification level</li>
+            <li>Understand career benefits of AI certification</li>
             <li>24/7 availability for your convenience</li>
-            <li>Secure and private conversations</li>
-            <li>Context-aware responses for better understanding</li>
+            <li>Register for courses with special discounts</li>
             <li>Multi-language support</li>
           </ul>
 
           <div class="examples">
             <div class="example-card">
-              <h3>Customer Support</h3>
-              <p>"How can I reset my password?"</p>
+              <h3>Certification Info</h3>
+              <p>"What's included in the CGAF certification?"</p>
             </div>
             <div class="example-card">
-              <h3>Product Information</h3>
-              <p>"What are the features of your premium plan?"</p>
+              <h3>Career Benefits</h3>
+              <p>"How will AI certification help my career?"</p>
             </div>
             <div class="example-card">
-              <h3>Troubleshooting</h3>
-              <p>"Why is my account not working?"</p>
+              <h3>Registration</h3>
+              <p>"How do I register for the CGAE program?"</p>
             </div>
           </div>
         </div>
 
         <div class="chat-container">
-          <div id="chat-header">AI Assistant</div>
+          <div id="chat-header">AI Training Assistant</div>
           <div id="chatbox">
             <!-- Messages will be added here dynamically -->
           </div>
@@ -574,7 +629,7 @@
           document.getElementById('chatPage').style.display = 'block';
           
           // Add a default message
-          addBotMessage("Hello! Welcome to CPI Technologies. How can I help you achieve your goal today?");
+          addBotMessage("Hello! Welcome to CPI Technologies' i3Cert Generative AI Certification Pathway. How can I help you with our training programs today?");
           showServiceOptions();
         });
     }
@@ -583,14 +638,14 @@
     function showServiceOptions() {
       const serviceOptions = `
         <div class="service-buttons">
-          <button class="service-button" onclick="selectService('training course')">Training Course</button>
-          <button class="service-button" onclick="selectService('digital services')">Digital Services</button>
-          <button class="service-button" onclick="selectService('it services')">IT Services</button>
-          <button class="service-button" onclick="selectService('other service')">Other Service</button>
+          <button class="service-button" onclick="selectService('cgaf')">CGAF (Fundamentals)</button>
+          <button class="service-button" onclick="selectService('cgaa')">CGAA (Associate)</button>
+          <button class="service-button" onclick="selectService('cgap')">CGAP (Professional)</button>
+          <button class="service-button" onclick="selectService('cgae')">CGAE (Expert)</button>
         </div>
       `;
       
-      addBotMessage("Please select one of our services:", serviceOptions);
+      addBotMessage("Please select one of our certification levels to continue:", serviceOptions);
     }
 
     // Function to handle service selection
@@ -629,6 +684,12 @@
       if (htmlContent) {
         messageHTML += htmlContent;
       }
+      
+      // Add discount message if it's about email verification
+      if (message.includes("verification email")) {
+        messageHTML += `<div class="discount-badge">You will receive instant 5% discount off the course fees once you confirm your email!</div>`;
+      }
+      
       messageHTML += `</div>`;
       
       messageContainer.innerHTML = messageHTML;
@@ -646,212 +707,119 @@
     }
 
     // Function to send message to server
-    // Function to send message to server
-function sendMessageToServer(message) {
-  // Show typing indicator
-  const typingContainer = document.createElement("div");
-  typingContainer.className = "message-container";
-  typingContainer.innerHTML = `
-      <div class="message bot typing">
-          Thinking
-          <div class="typing-dots">
-              <div class="typing-dot"></div>
-              <div class="typing-dot"></div>
-              <div class="typing-dot"></div>
+    function sendMessageToServer(message) {
+      // Show typing indicator
+      const typingContainer = document.createElement("div");
+      typingContainer.className = "message-container";
+      typingContainer.innerHTML = `
+          <div class="message bot typing">
+              Thinking
+              <div class="typing-dots">
+                  <div class="typing-dot"></div>
+                  <div class="typing-dot"></div>
+                  <div class="typing-dot"></div>
+              </div>
           </div>
-      </div>
-  `;
-  chatbox.appendChild(typingContainer);
-  chatbox.scrollTop = chatbox.scrollHeight;
+      `;
+      chatbox.appendChild(typingContainer);
+      chatbox.scrollTop = chatbox.scrollHeight;
 
-  // Send to backend with current node and session ID
-  fetch('/reply/', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-      },
-      body: JSON.stringify({
-          message: message,
-          current_node: currentNodeId,
-          session_id: sessionId
+      // Send to backend with current node and session ID
+      fetch('/reply/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({
+              message: message,
+              current_node: currentNodeId,
+              session_id: sessionId
+          })
       })
-  })
-      .then(res => res.json())
-      .then(data => {
-          // Remove typing indicator
-          typingContainer.remove();
+          .then(res => res.json())
+          .then(data => {
+              // Remove typing indicator
+              typingContainer.remove();
 
-          // Update current node
-          if (data.current_node) {
-              currentNodeId = data.current_node;
-          }
-
-          // Show bot response
-          addBotMessage(data.response);
-
-          // Check if we need to show confirmation buttons for email
-          if (data.response.includes("Is this correct?") && data.response.includes("@")) {
-              // Extract email from response
-              const emailMatch = data.response.match(/[\w\.-]+@[\w\.-]+\.\w+/);
-              if (emailMatch) {
-                  showConfirmationButtons(emailMatch[0]);
+              // Update current node
+              if (data.current_node) {
+                  currentNodeId = data.current_node;
               }
-          }
-          
-          // Check if we need to show service options
-          if (data.show_service_options) {
-              showServiceOptions();
-          }
-          
-          // Check if we're waiting for verification
-          if (data.waiting_for_verification) {
-              // Disable the input field until verification is complete
-              document.getElementById("userInput").disabled = true;
-              document.getElementById("sendBtn").disabled = true;
-          } else {
-              // Re-enable input if not waiting for verification
-              document.getElementById("userInput").disabled = false;
-              document.getElementById("sendBtn").disabled = false;
-          }
-      })
-      .catch(err => {
-          // Remove typing indicator
-          typingContainer.remove();
-          
-          // Re-enable input in case of error
-          document.getElementById("userInput").disabled = false;
-          document.getElementById("sendBtn").disabled = false;
-          
-          // Show error message
-          addBotMessage("Sorry, I'm having trouble connecting right now. Please try again later.");
-      });
-}
-    
 
-    // Update the sendMessage function for text input
-    function sendMessage() {
-      let input = document.getElementById("userInput");
-      let text = input.value.trim();
-      if (!text) return;
+              // Show bot response
+              addBotMessage(data.response);
 
-      // Add user message
-      addUserMessage(text);
-
-      // Send to server
-      sendMessageToServer(text);
-
-      // Clear input
-      input.value = "";
+              // Check if we need to show confirmation buttons for email
+              if (data.response.includes("Is this correct?") && data.response.includes("@")) {
+                  // Extract email from response
+                  const emailMatch = data.response.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
+                  if (emailMatch) {
+                      showConfirmationButtons(emailMatch[0]);
+                  }
+              }
+              
+              // Check if we need to show service options
+              if (data.show_service_options) {
+                  showServiceOptions();
+              }
+              
+              // Check if we need to show discount message
+              if (data.waiting_for_verification) {
+                  const discountBadge = document.createElement("div");
+                  discountBadge.className = "discount-badge";
+                  discountBadge.innerHTML = "You will receive instant 5% discount off the course fees once you confirm your email!";
+                  chatbox.appendChild(discountBadge);
+                  chatbox.scrollTop = chatbox.scrollHeight;
+              }
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              // Remove typing indicator
+              typingContainer.remove();
+              addBotMessage("Sorry, I'm having trouble connecting. Please try again.");
+          });
     }
 
-    // Helper function to get CSRF token
+    // Function to send message from input
+    function sendMessage() {
+      const userInput = document.getElementById('userInput');
+      const message = userInput.value.trim();
+      
+      if (message) {
+          // Add user message to chat
+          addUserMessage(message);
+          
+          // Clear input
+          userInput.value = '';
+          
+          // Send to server
+          sendMessageToServer(message);
+      }
+    }
+
+    // Function to get CSRF token
     function getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
           }
-        }
       }
       return cookieValue;
     }
-</script>
-<script>
-  // Listen for email verification messages from other tabs/windows
-  window.addEventListener('message', function(event) {
-      if (event.data.type === 'email_verified' && event.data.verified) {
-          if (event.data.session_id === sessionId) {
-              // Re-enable the chat input
-              document.getElementById("userInput").disabled = false;
-              document.getElementById("sendBtn").disabled = false;
-              
-              // Show a message that verification was successful
-              addBotMessage("Great! Your email has been verified. How can I help you continue?");
-          }
-      }
-  });
 
-  // Function to check verification status with the server
-  function checkVerificationStatus() {
-      fetch(`/check-verification/?session_id=${sessionId}`)
-          .then(res => res.json())
-          .then(data => {
-              if (data.verified) {
-                  // Re-enable the chat input
-                  document.getElementById("userInput").disabled = false;
-                  document.getElementById("sendBtn").disabled = false;
-                  
-                  // Show a message that verification was successful
-                  addBotMessage("Great! Your email has been verified. How can I help you continue?");
-                  
-                  // Clear any interval that might be running
-                  clearInterval(verificationCheckInterval);
-              }
-          })
-          .catch(err => {
-              console.log('Error checking verification status:', err);
-          });
-  }
-
-  // Check session storage for verification status when page loads
-  window.addEventListener('load', function() {
-      const isVerified = sessionStorage.getItem('email_verified');
-      const verificationTime = sessionStorage.getItem('verification_time');
-      const verifiedSessionId = sessionStorage.getItem('verified_session_id');
-      
-      if (isVerified === 'true' && verifiedSessionId === sessionId) {
-          // Check if verification was recent (within last 5 minutes)
-          const currentTime = new Date().getTime();
-          const fiveMinutes = 5 * 60 * 1000;
-          
-          if (currentTime - parseInt(verificationTime) < fiveMinutes) {
-              // Re-enable the chat input
-              document.getElementById("userInput").disabled = false;
-              document.getElementById("sendBtn").disabled = false;
-              
-              // Show a message that verification was successful
-              addBotMessage("Welcome back! Your email has been verified. How can I help you today?");
-              
-              // Clear the verification status
-              sessionStorage.removeItem('email_verified');
-              sessionStorage.removeItem('verification_time');
-              sessionStorage.removeItem('verified_session_id');
-          }
+    // Add event listener for Enter key
+    document.getElementById('userInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+          sendMessage();
       }
-      
-      // If input is disabled, start checking verification status periodically
-      if (document.getElementById("userInput").disabled) {
-          verificationCheckInterval = setInterval(checkVerificationStatus, 3000);
-      }
-  });
-
-  let verificationCheckInterval = null;
-
-  // Also add a function to check verification status periodically
-  setInterval(function() {
-      // If input is disabled but we're not waiting for verification, re-enable it
-      const inputDisabled = document.getElementById("userInput").disabled;
-      const sendBtnDisabled = document.getElementById("sendBtn").disabled;
-      
-      if (inputDisabled || sendBtnDisabled) {
-          // Start checking verification status if not already doing so
-          if (!verificationCheckInterval) {
-              verificationCheckInterval = setInterval(checkVerificationStatus, 3000);
-          }
-      } else {
-          // Stop checking if input is enabled
-          if (verificationCheckInterval) {
-              clearInterval(verificationCheckInterval);
-              verificationCheckInterval = null;
-          }
-      }
-  }, 3000); // Check every 3 seconds
-</script>
-  
+    });
+  </script>
 </body>
 </html>

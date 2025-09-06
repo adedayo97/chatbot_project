@@ -7,9 +7,11 @@ import re
 # ✅ Initialize OpenAI client correctly for PythonAnywhere
 client = OpenAI(api_key=getattr(settings, "OPENAI_API_KEY", os.getenv("OPENAI_API_KEY")))
 
+# utils.py - Update the ask_openai function
+
 def ask_openai(user_input, current_node_id=None):
     """
-    Generate a response using OpenAI API with context from nodes and CPI Technologies website
+    Generate a response using OpenAI API with context from nodes and i3Cert Training info
     """
     try:
         # Get relevant nodes based on user input
@@ -18,51 +20,60 @@ def ask_openai(user_input, current_node_id=None):
         # Get node context for the prompt
         node_context = get_node_context(relevant_nodes)
         
-        # CPI Technologies website content (based on typical IT company offerings)
-        website_context = """
-        CPI Technologies Inc. is a leading provider of innovative technology solutions. 
-        We specialize in helping businesses transform through cutting-edge IT services, 
-        software development, cloud solutions, and cybersecurity.
-        
-        Our core services include:
-        - IT Consulting & Digital Strategy
-        - Custom Software Development
-        - Cloud Migration & Management
-        - Cybersecurity & Compliance
-        - Data Analytics & Business Intelligence
-        - Managed IT Services
-        - Digital Transformation
-        
-        We serve clients across various industries including healthcare, finance, 
-        manufacturing, retail, and education. Our mission is to deliver exceptional 
-        value through technology expertise, innovative thinking, and commitment to excellence.
-        
+        # i3Cert Training content from the document
+        training_context = """
+        i3Cert Generative AI Certification Pathway by CPI Technologies:
+
+        The program provides a progressive learning journey for professionals, students, 
+        and organizations to master Generative Artificial Intelligence.
+
+        Certification Levels:
+        1. Certified Generative AI Fundamentals (CGAF) - Entry-Level (8 hours)
+        2. Certified Generative AI Associate (CGAA) - Intermediate (32 hours) 
+        3. Certified Generative AI Professional (CGAP) - Advanced (60 hours)
+        4. Certified Generative AI Expert (CGAE) - Expert-Level (80-100 hours)
+
+        Key Benefits:
+        - Future-Proof Your Career: Over 60% of jobs will be influenced by AI in 5 years
+        - Practical, Hands-On Learning: Build chatbots, AI apps, automation workflows
+        - Structured Learning Pathway: From basic literacy to enterprise deployment
+        - Cross-Industry Relevance: Education, healthcare, business, government, creativity
+        - Global Recognition & Networking: Internationally respected certifications
+        - Responsible & Ethical AI Training: Learn secure and ethical use of AI
+
+        Each certification includes:
+        - Comprehensive course materials
+        - Hands-on labs and projects
+        - Industry-recognized certification
+        - Digital badge and certificate
+        - Access to global community
+
         Contact Information:
         - Phone: +1224-201-8888
         - Email: sales@cpitechinc.com
         - Website: www.cpitechinc.com
-        - Address: 1900 N Austin Avenue, suite 210,Chicago 60639 IL
+        - Address: 1900 N Austin Avenue, suite 210, Chicago 60639 IL
         """
         
         # Create a comprehensive system prompt
-        system_prompt = f"""You are a friendly AI assistant for CPI Technologies, a professional IT services company.
+        system_prompt = f"""You are a friendly AI training advisor for CPI Technologies' i3Cert Generative AI Certification Pathway.
 
-COMPANY BACKGROUND:
-{website_context}
+TRAINING PROGRAM INFORMATION:
+{training_context}
 
-RELEVANT SERVICE INFORMATION:
+RELEVANT COURSE INFORMATION:
 {node_context}
 
 RESPONSE GUIDELINES:
-1. Respond primarily based on the CPI Technologies context provided above
-2. If the query is unrelated to IT services or CPI Technologies, politely redirect to relevant topics
+1. Respond primarily based on the i3Cert Training context provided above
+2. If the query is unrelated to AI training, politely redirect to our certification programs
 3. Keep responses concise (2-3 paragraphs maximum)
-4. Maintain a professional, helpful tone
+4. Maintain a professional, helpful tone focused on education
 5. If asking follow-up questions, make them open-ended to continue the conversation
-6. For pricing inquiries, explain that it varies by project and offer to provide a custom quote
-7. For technical issues, offer to connect with appropriate specialists
+6. For pricing inquiries, explain that it varies by program and offer to provide details
+7. For technical questions, offer to connect with our training specialists
 
-IMPORTANT: If you cannot answer based on the context, say "I specialize in CPI Technologies services. How can I help you with our IT solutions?"""
+IMPORTANT: If you cannot answer based on the context, say "I specialize in CPI Technologies' i3Cert Generative AI training programs. How can I help you with our certification pathway?"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -78,7 +89,7 @@ IMPORTANT: If you cannot answer based on the context, say "I specialize in CPI T
         return response.choices[0].message.content.strip()
         
     except Exception as e:
-        error_msg = f"I apologize, but I'm experiencing technical difficulties. Please try again later."
+        error_msg = f"I apologize, but I'm experiencing technical difficulties. Please try again later or contact our training support team."
         # Log the error for debugging
         print(f"OpenAI API Error: {str(e)}")
         return error_msg
