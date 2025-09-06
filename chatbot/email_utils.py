@@ -9,7 +9,7 @@ def send_verification_email(user_inquiry):
     subject = "Verify Your Email Address - i3Cert Generative AI Training"
     
     # Create verification link for development
-    verification_link = f"http://127.0.0.1:8000/verify-email/{user_inquiry.verification_token}/"
+    verification_link = f"http://adedayo.pythonanywhere.com/verify-email/{user_inquiry.verification_token}/"
     
     # HTML email content - Updated for training focus
     html_message = render_to_string('chatbot/verification_email.html', {
