@@ -16,6 +16,8 @@ def home(request):
     start_node = Node.objects.filter(is_start=True).first() or Node.objects.first()
     return render(request, "chatbot/index.html", {'start_message': start_node.message if start_node else "Hello! How can I help you?"})
 
+# views.py - Update the reply function
+
 @csrf_exempt
 @require_POST
 def reply(request):
@@ -29,28 +31,7 @@ def reply(request):
     
     # Initialize session if it doesn't exist
     if session_id not in user_sessions:
-        user_sessions[session_id] = {"name": "", "email": "", "service": "", "next_step": None, "show_services": True, "email_confirmed": False, "waiting_for_verification": False}
-    
-    # Check if user is waiting for email verification
-    if user_sessions[session_id].get("waiting_for_verification"):
-        # Check if email has been verified in the database
-        try:
-            user_inquiry = UserInquiry.objects.get(session_id=session_id)
-            if user_inquiry.is_verified:
-                user_sessions[session_id]["waiting_for_verification"] = False
-                bot_response = "Great! Your email has been verified. How can I help you continue?"
-            else:
-                bot_response = "Please check your email and verify your address to continue the conversation. We've sent a verification link to your email."
-        except UserInquiry.DoesNotExist:
-            bot_response = "Please check your email and verify your address to continue the conversation. We've sent a verification link to your email."
-        
-        return JsonResponse({
-            "response": bot_response,
-            "current_node": current_node_id,
-            "session_id": session_id,
-            "show_service_options": False,
-            "waiting_for_verification": user_sessions[session_id].get("waiting_for_verification", False)
-        })
+        user_sessions[session_id] = {"name": "", "email": "", "course": "", "next_step": None, "show_courses": True, "email_confirmed": False, "waiting_for_verification": False}
     
     bot_response = None
     next_node_id = None
@@ -65,15 +46,15 @@ def reply(request):
     
     # Check if user is in the middle of a flow
     next_step = user_sessions[session_id].get("next_step")
-    show_services = user_sessions[session_id].get("show_services", False)
+    show_courses = user_sessions[session_id].get("show_courses", False)
     
-    # Handle name collection after service selection
+    # Handle name collection after course selection
     if next_step == "ask_name":
         user_sessions[session_id]["name"] = user_input
         user_sessions[session_id]["next_step"] = "ask_email"
-        user_sessions[session_id]["show_services"] = False
+        user_sessions[session_id]["show_courses"] = False
         
-        bot_response = f"Thank you {user_input}. Can you please provide the best email for us to reach you?"
+        bot_response = f"Thank you {user_input}. Can you please provide the best email for us to reach you and send your course materials?"
         next_node_id = current_node_id if current_node_id else None
     
     # Handle email collection
@@ -88,20 +69,20 @@ def reply(request):
                     # Email already verified, continue conversation
                     user_sessions[session_id]["email"] = user_input
                     user_sessions[session_id]["next_step"] = None
-                    user_sessions[session_id]["show_services"] = False
+                    user_sessions[session_id]["show_courses"] = False
                     user_sessions[session_id]["email_confirmed"] = True
                     
                     # Update current session with existing user info
                     user_sessions[session_id]["name"] = existing_inquiry.name
-                    user_sessions[session_id]["service"] = existing_inquiry.service
+                    user_sessions[session_id]["course"] = existing_inquiry.service
                     
-                    bot_response = f"Welcome back {existing_inquiry.name}! Your email is already verified. How can I help you with our {existing_inquiry.service} services today?"
+                    bot_response = f"Welcome back {existing_inquiry.name}! Your email is already verified. How can I help you with our {existing_inquiry.service} certification today?"
                     next_node_id = current_node_id if current_node_id else None
                 else:
                     # Email exists but not verified, continue with confirmation
                     user_sessions[session_id]["email"] = user_input
                     user_sessions[session_id]["next_step"] = "confirm_email"
-                    user_sessions[session_id]["show_services"] = False
+                    user_sessions[session_id]["show_courses"] = False
                     
                     bot_response = f"Thank you. Just to make sure we got it right, your email is {user_input}. Is this correct? (Please respond with 'yes' or 'no')"
                     next_node_id = current_node_id if current_node_id else None
@@ -110,19 +91,19 @@ def reply(request):
                 # New email
                 user_sessions[session_id]["email"] = user_input
                 user_sessions[session_id]["next_step"] = "confirm_email"
-                user_sessions[session_id]["show_services"] = False
+                user_sessions[session_id]["show_courses"] = False
                 
                 bot_response = f"Thank you. Just to make sure we got it right, your email is {user_input}. Is this correct? (Please respond with 'yes' or 'no')"
                 next_node_id = current_node_id if current_node_id else None
         else:
-            bot_response = "That doesn't look like a valid email address. Please provide a valid email."
+            bot_response = "That doesn't look like a valid email address. Please provide a valid email where we can send your course information."
             next_node_id = current_node_id if current_node_id else None
     
     # Handle email confirmation
     elif next_step == "confirm_email":
         if user_input in ["yes", "y", "correct", "right"]:
             user_sessions[session_id]["next_step"] = None
-            user_sessions[session_id]["show_services"] = False
+            user_sessions[session_id]["show_courses"] = False
             user_sessions[session_id]["email_confirmed"] = True
             
             # Check if email already exists in database
@@ -131,12 +112,12 @@ def reply(request):
                 
                 if existing_inquiry.is_verified:
                     # Email already verified, continue conversation
-                    bot_response = f"Welcome back {existing_inquiry.name}! Your email is already verified. How can I help you with our {existing_inquiry.service} services today?"
+                    bot_response = f"Welcome back {existing_inquiry.name}! Your email is already verified. How can I help you with our {existing_inquiry.service} certification today?"
                     next_node_id = current_node_id if current_node_id else None
                 else:
                     # Update existing record
                     existing_inquiry.name = user_sessions[session_id]["name"]
-                    existing_inquiry.service = user_sessions[session_id].get("service", "general inquiry")
+                    existing_inquiry.service = user_sessions[session_id].get("course", "Generative AI Certification")
                     existing_inquiry.session_id = session_id
                     existing_inquiry.email_confirmed = True
                     existing_inquiry.save()
@@ -144,9 +125,9 @@ def reply(request):
                     # Send verification email
                     if send_verification_email(existing_inquiry):
                         user_sessions[session_id]["waiting_for_verification"] = True
-                        bot_response = "Perfect! We've sent a verification email to your address. Please check your inbox and click the verification link to continue our conversation. You'll need to verify your email before we can proceed."
+                        bot_response = "Perfect! We've sent a verification email to your address. Please check your inbox and click the verification link to receive your instant 5% discount off the course fees. You can continue chatting with me about our training programs while you wait!"
                     else:
-                        bot_response = "We encountered an issue sending the verification email. Please try again later or contact support."
+                        bot_response = "We encountered an issue sending the verification email. Please try again later or contact our training support team."
                     
             except UserInquiry.DoesNotExist:
                 # Create new record
@@ -154,7 +135,7 @@ def reply(request):
                     user_inquiry = UserInquiry.objects.create(
                         name=user_sessions[session_id]["name"],
                         email=user_sessions[session_id]["email"],
-                        service=user_sessions[session_id].get("service", "general inquiry"),
+                        service=user_sessions[session_id].get("course", "Generative AI Certification"),
                         session_id=session_id,
                         email_confirmed=True
                     )
@@ -162,9 +143,9 @@ def reply(request):
                     # Send verification email
                     if send_verification_email(user_inquiry):
                         user_sessions[session_id]["waiting_for_verification"] = True
-                        bot_response = "Perfect! We've sent a verification email to your address. Please check your inbox and click the verification link to continue our conversation. You'll need to verify your email before we can proceed."
+                        bot_response = "Perfect! We've sent a verification email to your address. Please check your inbox and click the verification link to receive your instant 5% discount off the course fees. You can continue chatting with me about our training programs while you wait!"
                     else:
-                        bot_response = "We encountered an issue sending the verification email. Please try again later or contact support."
+                        bot_response = "We encountered an issue sending the verification email. Please try again later or contact our training support team."
                         
                 except Exception as e:
                     print(f"Error saving user inquiry: {e}")
@@ -174,41 +155,49 @@ def reply(request):
         
         elif user_input in ["no", "n", "incorrect", "wrong"]:
             user_sessions[session_id]["next_step"] = "ask_email"
-            user_sessions[session_id]["show_services"] = False
+            user_sessions[session_id]["show_courses"] = False
             user_sessions[session_id]["email"] = ""  # Clear the email
             
-            bot_response = "I apologize for the mistake. Please provide your email again."
+            bot_response = "I apologize for the mistake. Please provide your email again so we can send your course information."
             next_node_id = current_node_id if current_node_id else None
         
         else:
             bot_response = "Please respond with 'yes' or 'no'. Is your email correct?"
             next_node_id = current_node_id if current_node_id else None
     
-    # Handle service selection (from buttons or text)
-    elif not next_step and user_input in ["training course", "digital services", "it services", "other service", "training", "digital", "it", "other"]:
-        # Map variations to the standard service names
-        service_map = {
-            "training": "training course",
-            "digital": "digital services", 
-            "it": "it services",
-            "other": "other service"
+    # Handle course selection (from buttons or text)
+    elif not next_step and user_input in ["cgaf", "cgaa", "cgap", "cgae", "fundamentals", "associate", "professional", "expert", "level 1", "level 2", "level 3", "level 4"]:
+        # Map variations to the standard course names
+        course_map = {
+            "cgaf": "Certified Generative AI Fundamentals (CGAF)",
+            "fundamentals": "Certified Generative AI Fundamentals (CGAF)",
+            "level 1": "Certified Generative AI Fundamentals (CGAF)",
+            "cgaa": "Certified Generative AI Associate (CGAA)",
+            "associate": "Certified Generative AI Associate (CGAA)", 
+            "level 2": "Certified Generative AI Associate (CGAA)",
+            "cgap": "Certified Generative AI Professional (CGAP)",
+            "professional": "Certified Generative AI Professional (CGAP)",
+            "level 3": "Certified Generative AI Professional (CGAP)",
+            "cgae": "Certified Generative AI Expert (CGAE)",
+            "expert": "Certified Generative AI Expert (CGAE)",
+            "level 4": "Certified Generative AI Expert (CGAE)"
         }
         
-        service = service_map.get(user_input, user_input)
-        user_sessions[session_id]["service"] = service
+        course = course_map.get(user_input, "Generative AI Certification")
+        user_sessions[session_id]["course"] = course
         user_sessions[session_id]["next_step"] = "ask_name"
-        user_sessions[session_id]["show_services"] = False
+        user_sessions[session_id]["show_courses"] = False
         
         # Thank user for their selection
-        bot_response = f"Great! You're interested in our {service}. Before we continue, we'd like to quickly get some basic details about you. What is your name?"
+        bot_response = f"Excellent choice! You're interested in our {course}. Before we continue, we'd like to quickly get some basic details about you. What is your name?"
         next_node_id = current_node_id if current_node_id else None
     
-    # Handle initial message - show service options if no next_step
-    elif not next_step and show_services:
-        # If user typed something that's not a service, still show service options
-        user_sessions[session_id]["show_services"] = True
+    # Handle initial message - show course options if no next_step
+    elif not next_step and show_courses:
+        # If user typed something that's not a course, still show course options
+        user_sessions[session_id]["show_courses"] = True
         
-        bot_response = "Please select one of our services to continue:"
+        bot_response = "Please select one of our certification levels to continue:"
         next_node_id = current_node_id if current_node_id else None
     
     # If no special handling, try to find a matching option from the current node
@@ -234,24 +223,24 @@ def reply(request):
             bot_response = option.to_node.message
             next_node_id = option.to_node.id
     
-    # If still no match, use OpenAI but still show service options if needed
+    # If still no match, use OpenAI but still show course options if needed
     if not bot_response:
-        if not next_step and user_sessions[session_id].get("show_services", True):
-            user_sessions[session_id]["show_services"] = True
-            bot_response = "Please select one of our services to continue:"
+        if not next_step and user_sessions[session_id].get("show_courses", True):
+            user_sessions[session_id]["show_courses"] = True
+            bot_response = "Please select one of our certification levels to continue:"
         else:
             bot_response = ask_openai(user_input)
         # Stay on the same node
         next_node_id = current_node_id
     
-    # Add flag to indicate if service options should be shown
-    show_service_options = user_sessions[session_id].get("show_services", False) and not next_step
+    # Add flag to indicate if course options should be shown
+    show_course_options = user_sessions[session_id].get("show_courses", False) and not next_step
     
     return JsonResponse({
         "response": bot_response,
         "current_node": next_node_id,
         "session_id": session_id,
-        "show_service_options": show_service_options,
+        "show_course_options": show_course_options,
         "waiting_for_verification": user_sessions[session_id].get("waiting_for_verification", False)
     })
 
